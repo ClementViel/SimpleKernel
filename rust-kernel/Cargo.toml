@@ -1,0 +1,11 @@
+[package]
+name = "rust-kernel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+[profile.dev]
+panic = "abort"
+opt-level = 1
+debug = false
+overflow-checks = false
