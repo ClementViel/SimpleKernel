@@ -5,52 +5,22 @@ use core::intrinsics::abort;
 use core::panic::PanicInfo;
 use core::intrinsics::volatile_load;
 use core::intrinsics::volatile_store;
+use core::arch;
 
-const FREQ: u32 = 250_000;
-const GPIO_FSEL0: u32 = 0x20200000;
-const GPIO_FSEL1: u32 = 0x20200004;
-const GPIO_SET0: u32 = 0x2020001C;
-const GPIO_SET1: u32 = 0x20200020;
-const GPIO_CLR0: u32 = 0x20200028;
-const GPIO_CLR1: u32 = 0x2020002C;
-
-fn sleep(time: u32) {
-    let mut tick: u32 = 500_000;
-
-    while tick > 0 {
-         tick -= 1;
-    }
-}
-
-#[no_mangle]
-fn gpio_select_mode(offset: u32, mode: u32) {
-    let gpio_fun_reg = GPIO_FSEL1 as *mut u32;
-    unsafe {*(gpio_fun_reg) |= mode << offset }
-}
-
-#[no_mangle]
-fn gpio_set(gpio: u32) {
-    let gpio_to_set = GPIO_SET0 as *mut u32;
-    unsafe {*(gpio_to_set) = 1 << gpio }
-
-}
-
-#[no_mangle]
-fn gpio_clr(gpio: u32) {
-    let gpio_to_clr = GPIO_CLR0 as *mut u32;
-    unsafe {*(gpio_to_clr) = 1 << gpio }
-   
-}
+mod gpio;
+mod utils;
 
 #[no_mangle]
 fn blink_led() {
     // setting GPIO16 to 1 which is output
-    gpio_select_mode(18, 1);
-    loop {
-    for i in 0..50000000 {}
-    gpio_clr(16);
-    for i in 0..50000000 {}
-    gpio_set(16);
+    gpio::gpio_select_mode(18, 1);
+    unsafe { 
+        loop {
+            utils::sleepms(1000);
+            gpio::gpio_clr(16);
+            utils::sleepms(1000);
+            gpio::gpio_set(16);
+        }
     }
 }
 
