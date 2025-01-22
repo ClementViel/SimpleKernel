@@ -1,32 +1,35 @@
 #![no_std]
-#![feature(core_intrinsics, lang_items)]
+#![feature(core_intrinsics, lang_items, panic_internals)]
+#![crate_type="staticlib"]
 
 use core::intrinsics::abort;
 use core::panic::PanicInfo;
-use core::intrinsics::volatile_load;
-use core::intrinsics::volatile_store;
-use core::arch;
 
 mod gpio;
 mod utils;
+mod uart;
 
 #[no_mangle]
-fn blink_led() {
+//THis function to indicate that we are executing the simple kernel
+fn blink_led_ok() {
     // setting GPIO16 to 1 which is output
-    gpio::gpio_select_mode(18, 1);
-    unsafe { 
-        loop {
-            utils::sleepms(1000);
-            gpio::gpio_clr(16);
-            utils::sleepms(1000);
-            gpio::gpio_set(16);
-        }
+    gpio::gpio_select_mode(18, 0);
+    for _ in 0..5 {
+        utils::sleepms(500);
+        gpio::gpio_clr(16);
+        utils::sleepms(500);
+        gpio::gpio_set(16);
     }
 }
 
 #[no_mangle]
 pub extern fn kernel_main() {
-    blink_led();
+   uart::init_uart();
+    blink_led_ok();
+    loop {
+        utils::sleepms(3);
+      //  uart::send_uart(0x51);
+    }
 }
 
 // These functions below provide definitions for symbols libcore
